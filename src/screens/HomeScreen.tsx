@@ -1,10 +1,4 @@
-import React, {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {
   View,
   Text,
@@ -13,39 +7,31 @@ import {
   TextInput,
   RefreshControl,
   ActivityIndicator,
-  StyleSheet,
+  StyleSheet
 } from 'react-native';
-
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {useDispatch, useSelector} from 'react-redux';
 import {getNews} from '../features/news/newsSlice';
 import {RootState} from '../store';
 
+import {COLORS} from '../theme/colors';
+import {FONTS} from '../theme/fonts';
 import useDebounce from '../hooks/useDebounce';
 
-export default function HomeScreen({
-  navigation,
-}: any) {
+export default function HomeScreen({navigation}: any) {
   const dispatch = useDispatch<any>();
 
-  const {data, loading, error} =
-    useSelector(
-      (state: RootState) => state.news,
-    );
+  const {data, loading, error} = useSelector(
+    (state: RootState) => state.news,
+  );
 
-  const [refreshing, setRefreshing] =
-    useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('score');
 
-  const [search, setSearch] =
-    useState('');
-
-  const [sortBy, setSortBy] =
-    useState('score');
-
+  const debouncedSearch = useDebounce(search);
   const listRef = useRef<any>(null);
   const scrollY = useRef(0);
-
-  const debouncedSearch =
-    useDebounce(search);
 
   useEffect(() => {
     dispatch(getNews());
@@ -64,9 +50,7 @@ export default function HomeScreen({
       temp = temp.filter(item =>
         item.title
           .toLowerCase()
-          .includes(
-            debouncedSearch.toLowerCase(),
-          ),
+          .includes(debouncedSearch.toLowerCase()),
       );
     }
 
@@ -81,66 +65,108 @@ export default function HomeScreen({
 
   const renderItem = ({item}: any) => (
     <TouchableOpacity
+      activeOpacity={0.9}
       style={styles.card}
       onPress={() =>
-        navigation.navigate(
-          'Detail',
-          {item},
-        )
+        navigation.navigate('Detail', {item})
       }>
-      <Text style={styles.title}>
+      
+      <View style={styles.badge}>
+        <Text style={styles.badgeText}>
+          {item.score}
+        </Text>
+      </View>
+
+      <Text
+        style={styles.title}
+        numberOfLines={2}>
         {item.title}
       </Text>
 
       <Text style={styles.meta}>
-        Score: {item.score}
+        {item.by} • Story
       </Text>
     </TouchableOpacity>
   );
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator />
-      </View>
+      <SafeAreaView style={styles.center}>
+        <ActivityIndicator
+          size="large"
+          color={COLORS.primary}
+        />
+      </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.center}>
-        <Text>{error}</Text>
-      </View>
+      <SafeAreaView style={styles.center}>
+        <Text style={styles.errorText}>
+          {error}
+        </Text>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={{flex: 1}}>
+   <SafeAreaView
+  edges={['top']}
+  style={styles.container}>
+      
+      <Text style={styles.greeting}>
+        Good Morning 👋
+      </Text>
+
+      <Text style={styles.heading}>
+        Top Stories
+      </Text>
+
       <TextInput
-        placeholder="Search..."
-        style={styles.input}
+        placeholder="Search articles..."
+        placeholderTextColor={COLORS.subText}
+        style={styles.search}
         value={search}
         onChangeText={setSearch}
       />
 
-      <View style={styles.row}>
+      <View style={styles.sortRow}>
         <TouchableOpacity
-          style={styles.sortBtn}
+          style={[
+            styles.sortBtn,
+            sortBy === 'score' &&
+              styles.activeBtn,
+          ]}
           onPress={() =>
             setSortBy('score')
           }>
-          <Text>
-            Sort Score
+          <Text
+            style={[
+              styles.sortText,
+              sortBy === 'score' &&
+                styles.activeText,
+            ]}>
+            By Score
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.sortBtn}
+          style={[
+            styles.sortBtn,
+            sortBy === 'time' &&
+              styles.activeBtn,
+          ]}
           onPress={() =>
             setSortBy('time')
           }>
-          <Text>
-            Sort Time
+          <Text
+            style={[
+              styles.sortText,
+              sortBy === 'time' &&
+                styles.activeText,
+            ]}>
+            By Time
           </Text>
         </TouchableOpacity>
       </View>
@@ -152,10 +178,15 @@ export default function HomeScreen({
           item.id.toString()
         }
         renderItem={renderItem}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingBottom: 100,
+        }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
+            tintColor={COLORS.primary}
           />
         }
         onScroll={e => {
@@ -163,67 +194,145 @@ export default function HomeScreen({
             e.nativeEvent.contentOffset.y;
         }}
         onLayout={() => {
-          listRef.current?.scrollToOffset(
-            {
-              offset:
-                scrollY.current,
-              animated: false,
-            },
-          );
+          listRef.current?.scrollToOffset({
+            offset: scrollY.current,
+            animated: false,
+          });
         }}
-        getItemLayout={(_, index) => ({
-          length: 90,
-          offset: 90 * index,
-          index,
-        })}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  input: {
-    margin: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 10,
-    borderRadius: 8,
+  container: {
+    flex: 1,
+    backgroundColor:
+      COLORS.border,
+    paddingHorizontal: 16,
   },
 
-  row: {
+  greeting: {
+    fontSize: 14,
+    marginTop: 10,
+    color: COLORS.subText,
+    fontFamily:
+      FONTS.regular,
+  },
+
+  heading: {
+    fontSize: 28,
+    marginTop: 4,
+    marginBottom: 18,
+    color: COLORS.text,
+    fontFamily: FONTS.bold,
+  },
+
+  search: {
+    backgroundColor:
+      COLORS.white,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontFamily:
+      FONTS.medium,
+    fontSize: 15,
+    borderWidth: 1,
+    borderColor:
+      COLORS.border,
+    marginBottom: 16,
+  },
+
+  sortRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 10,
+    marginBottom: 16,
   },
 
   sortBtn: {
-    backgroundColor: '#eee',
-    padding: 10,
-    borderRadius: 8,
+    flex: 1,
+    backgroundColor:
+      COLORS.white,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginRight: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor:
+      COLORS.border,
+  },
+
+  activeBtn: {
+    backgroundColor:
+      COLORS.primary,
+  },
+
+  sortText: {
+    fontFamily:
+      FONTS.medium,
+    color: COLORS.text,
+  },
+
+  activeText: {
+    color: COLORS.white,
   },
 
   card: {
-    backgroundColor: '#fff',
-    marginHorizontal: 10,
-    marginVertical: 6,
-    padding: 15,
-    borderRadius: 10,
-    elevation: 2,
+    backgroundColor:
+      COLORS.card,
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 14,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+  },
+
+  badge: {
+    backgroundColor:
+      COLORS.primary,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    marginBottom: 12,
+  },
+
+  badgeText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontFamily:
+      FONTS.bold,
   },
 
   title: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 16,
+    lineHeight: 24,
+    color: COLORS.text,
+    fontFamily:
+      FONTS.semibold,
   },
 
   meta: {
-    marginTop: 8,
-    color: 'gray',
+    marginTop: 10,
+    fontSize: 13,
+    color: COLORS.subText,
+    fontFamily:
+      FONTS.regular,
   },
 
   center: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent:
+      'center',
     alignItems: 'center',
+    backgroundColor:
+      COLORS.background,
+  },
+
+  errorText: {
+    color: COLORS.danger,
+    fontFamily:
+      FONTS.medium,
   },
 });

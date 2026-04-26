@@ -1,26 +1,61 @@
 import axios from 'axios';
 
-const BASE_URL = 'https://hacker-news.firebaseio.com/v0';
+const BASE_URL =
+  'https://hacker-news.firebaseio.com/v0';
 
-export const fetchTopStories = async () => {
-  const idsRes = await axios.get(`${BASE_URL}/topstories.json`);
+export interface NewsItem {
+  id: number;
+  by: string;
+  score: number;
+  time: number;
+  title: string;
+  type: string;
+  url: string;
+}
 
-  const first20 = idsRes.data.slice(0, 20);
+export const fetchTopStories =
+  async (): Promise<
+    NewsItem[]
+  > => {
+    try {
+      const idsResponse =
+        await axios.get(
+          `${BASE_URL}/topstories.json`,
+        );
 
-  const detailPromises = first20.map((id: number) =>
-    axios.get(`${BASE_URL}/item/${id}.json`)
-  );
+      const ids =
+        idsResponse.data
+          .slice(0, 20);
 
-  const details = await Promise.all(detailPromises);
+      const requests =
+        ids.map(
+          (id: number) =>
+            axios.get(
+              `${BASE_URL}/item/${id}.json`,
+            ),
+        );
 
-  const stories = details
-    .map(item => item.data)
-    .filter(
-      item =>
-        item &&
-        item.type === 'story' &&
-        item.url
-    );
+      const responses =
+        await Promise.all(
+          requests,
+        );
 
-  return stories;
-};
+      const stories =
+        responses
+          .map(
+            res =>
+              res.data,
+          )
+          .filter(
+            item =>
+              item &&
+              item.type ===
+                'story' &&
+              item.url,
+          );
+
+      return stories;
+    } catch (error) {
+      throw error;
+    }
+  };

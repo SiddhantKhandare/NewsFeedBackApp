@@ -1,43 +1,91 @@
-import {createSlice} from '@reduxjs/toolkit';
+import {
+  createSlice,
+  PayloadAction,
+} from '@reduxjs/toolkit';
+
+import {NewsItem} from '../../api/newsApi';
 
 interface BookmarkState {
-  data: any[];
+  data: NewsItem[];
 }
 
 const initialState: BookmarkState = {
   data: [],
 };
 
-const bookmarkSlice = createSlice({
-  name: 'bookmarks',
-  initialState,
+const bookmarkSlice =
+  createSlice({
+    name: 'bookmarks',
+    initialState,
 
-  reducers: {
-    setBookmarks(state, action) {
-      state.data = action.payload;
+    reducers: {
+      setBookmarks: (
+        state,
+        action:
+          PayloadAction<
+            NewsItem[]
+          >,
+      ) => {
+        state.data =
+          action.payload;
+      },
+
+      toggleBookmark: (
+        state,
+        action:
+          PayloadAction<NewsItem>,
+      ) => {
+        const item =
+          action.payload;
+
+        const exists =
+          state.data.find(
+            news =>
+              news.id ===
+              item.id,
+          );
+
+        if (exists) {
+          state.data =
+            state.data.filter(
+              news =>
+                news.id !==
+                item.id,
+            );
+        } else {
+          state.data.unshift(
+            item,
+          );
+        }
+      },
+
+      removeBookmark: (
+        state,
+        action:
+          PayloadAction<number>,
+      ) => {
+        state.data =
+          state.data.filter(
+            item =>
+              item.id !==
+              action.payload,
+          );
+      },
+
+      clearBookmarks:
+        state => {
+          state.data = [];
+        },
     },
-
-    toggleBookmark(state, action) {
-      const item = action.payload;
-
-      const exists = state.data.find(
-        news => news.id === item.id,
-      );
-
-      if (exists) {
-        state.data = state.data.filter(
-          news => news.id !== item.id,
-        );
-      } else {
-        state.data.push(item);
-      }
-    },
-  },
-});
+  });
 
 export const {
-  toggleBookmark,
   setBookmarks,
-} = bookmarkSlice.actions;
+  toggleBookmark,
+  removeBookmark,
+  clearBookmarks,
+} =
+  bookmarkSlice.actions;
 
-export default bookmarkSlice.reducer;
+export default
+  bookmarkSlice.reducer;
