@@ -205,7 +205,7 @@ const styles =
     container: {
       flex: 1,
       backgroundColor:
-        COLORS.background,
+        COLORS.border,
       padding: 16,
     },
 
