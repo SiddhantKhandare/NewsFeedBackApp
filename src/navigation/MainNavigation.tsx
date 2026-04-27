@@ -56,7 +56,6 @@ export default function MainNavigation() {
         tabBarLabelStyle: {
           fontSize: 12,
           fontFamily: FONTS.medium,
-          marginBottom: 6,
         },
 
         tabBarStyle: {
@@ -91,7 +90,7 @@ export default function MainNavigation() {
           return (
             <Ionicons
               name={iconName}
-              size={22}
+              size={20}
               color={color}
             />
           );
