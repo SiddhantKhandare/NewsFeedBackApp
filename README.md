@@ -13,6 +13,9 @@ npx react-native run-android
 - Redux Toolkit
 - React Navigation
 - AsyncStorage
+- Axios
+- React Native Safe Area Context
+- React Native Vector Icons
 
 ## Architecture Decision
 
